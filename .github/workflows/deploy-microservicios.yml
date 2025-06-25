@@ -1,0 +1,112 @@
+name: Deploy Microservicios a Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+
+  build-eureka:
+    name: Build y Deploy Eureka Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR Eureka
+        run: mvn clean package -DskipTests -f eureka-server/pom.xml
+
+      - name: Deploy Eureka to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'eureka' # nombre exacto del App Service
+          slot-name: 'Production'
+          package: 'eureka-server/target/*.jar'
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_EUREKA }}
+
+  build-player:
+    name: Build y Deploy Servicio Player
+    runs-on: ubuntu-latest
+    needs: build-eureka
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR Servicio Player
+        run: mvn clean package -DskipTests -f player-service/pom.xml
+
+      - name: Deploy Servicio Player to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'player'
+          slot-name: 'Production'
+          package: 'player-service/target/*.jar'
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_PLAYER }}
+
+  build-enemy:
+    name: Build y Deploy Servicio Enemy
+    runs-on: ubuntu-latest
+    needs: build-eureka
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR Servicio Enemy
+        run: mvn clean package -DskipTests -f enemy-service/pom.xml
+
+      - name: Deploy Servicio Enemy to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'enemy'
+          slot-name: 'Production'
+          package: 'enemy-service/target/*.jar'
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_ENEMY }}
+
+  build-gateway:
+    name: Build y Deploy Servicio Gateway
+    runs-on: ubuntu-latest
+    needs: [build-player, build-enemy]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR Servicio Gateway
+        run: mvn clean package -DskipTests -f api-gateway/pom.xml
+
+      - name: Deploy Servicio Gateway to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'gateway'
+          slot-name: 'Production'
+          package: 'api-gateway/target/*.jar'
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_GATEWAY }}

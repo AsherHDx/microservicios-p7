@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: player-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/videojuegop6
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8081
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1  # O la IP local de la máquina

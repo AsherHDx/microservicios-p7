@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true  #
+          lower-case-service-id: true
+      routes:
+        - id: player-service
+          uri: lb://player-service
+          predicates:
+            - Path=/players/**
+
+        - id: enemy-service
+          uri: lb://enemy-service #http://localhost:8082
+          predicates:
+            - Path=/enemies/**
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
+
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG
+
